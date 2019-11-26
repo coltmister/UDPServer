@@ -72,8 +72,6 @@ void quitWithLog() {//выход для SIGUSR1
     fflush(stdin);
 }
 
-}
-
 struct arg_struct { //Структура данных для передачи в новый поток
     char *data; //Сообщение пользоватея
     struct sockaddr_in clientAddress; //Адрес пользователя
