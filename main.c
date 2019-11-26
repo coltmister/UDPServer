@@ -57,23 +57,21 @@ void quit() { //Нормальный выход из программы
     exit(0);
 }
 
-void quitWithLog() { //выход для SIGUSR1
-    clock_t end = clock();
-    double time_spent = (double) (end - begin) / CLOCKS_PER_SEC;
+void quitWithLog() {//выход для SIGUSR1
+    time_t end;
+    time(&end);
     fprintf(logFile, "Завершение работы сервера.\n"
-                     "Сервер работал:%f с\n"
+                     "Сервер работал: %d с\n"
                      "Обслуженные запросы: %d\n"
-                     "Текущее время: %s\n", time_spent, count, currentTimestamp());
+                     "Текущее время: %s\n", (int) (end - begin), count, currentTimestamp());
     printf("Завершение работы сервера.\n"
-           "Сервер работал: %f с\n"
+           "Сервер работал: %d с\n"
            "Обслуженные запросы: %d\n"
-           "Текущее время: %s\n", time_spent, count, currentTimestamp());
+           "Текущее время: %s\n", (int) (end - begin), count, currentTimestamp());
     fflush(logFile);
     fflush(stdin);
-    fflush(stdin);
-    close(sock);
-    fclose(logFile);
-    exit(0);
+}
+
 }
 
 struct arg_struct { //Структура данных для передачи в новый поток
@@ -106,7 +104,8 @@ void *triangleSquare(void *arguments) {
         ptrEnd = ptr;
     }
     double trArea =
-            0.5 * fabs((input[2] - input[0]) * (input[5] - input[1]) - (input[4] - input[0]) * (input[3] - input[1])); // Считает площадь из найденных чисел
+            0.5 * fabs((input[2] - input[0]) * (input[5] - input[1]) -
+                       (input[4] - input[0]) * (input[3] - input[1])); // Считает площадь из найденных чисел
     char *trAreaText = (char *) malloc(sizeof(trArea));
     sprintf(trAreaText, "%f\n", trArea); //Перевод в строку
     if (sendto(sock, trAreaText, strlen(trAreaText), 0,
@@ -145,7 +144,8 @@ void serverHandler(int delay) {
     serverAddress.sin_family = AF_INET; //IP4 internetwork: UDP, TCP, etc.
     serverAddress.sin_port = htons(serverPort); //Устанавливаем порт
     serverAddress.sin_addr.s_addr = inet_addr(serverIP); //Указанный IP
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const void *) &optval, sizeof(int)); // Возможность переиспользовать указанный адрес
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const void *) &optval,
+               sizeof(int)); // Возможность переиспользовать указанный адрес
     if (bind(sock, (struct sockaddr *) &serverAddress, // Привязка сокета к определенному порту и адресу
              sizeof(struct sockaddr)) == -1) {
         error("ERROR 42: Binding failed");
@@ -162,7 +162,8 @@ void serverHandler(int delay) {
 
         memset(&args, 0, sizeof(struct arg_struct));
         messLength = recvfrom(sock, NULL, 0, MSG_PEEK | MSG_TRUNC,
-                              (struct sockaddr *) &args.clientAddress, &addrLength); // Получаем длину сообщения от клиента
+                              (struct sockaddr *) &args.clientAddress,
+                              &addrLength); // Получаем длину сообщения от клиента
         args.data = (char *) malloc(messLength); // Выделение памяти под сообщение
         if (args.data == NULL) {
             error("ERROR 52: Malloc failed");
